@@ -8,7 +8,9 @@ import net.zepalesque.calc.function.Multiplication;
 import net.zepalesque.calc.function.PolyTerm;
 import net.zepalesque.calc.function.Series;
 
-// TODO: trig functions
+// TODO: trig functions, INTEGRATION (if i can figure it out lmao), more logarithms,
+//  system for 'real constants' that can be represented by an integer over an integer,
+//  storing the ints to allow simplification without computation of the value (avoids floating point precision stuff)
 public class Calculus {
     
     public static void main(String[] args) {
