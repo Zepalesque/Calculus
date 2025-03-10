@@ -1,11 +1,8 @@
 package net.zepalesque.calc.function;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Integration {
@@ -23,7 +20,7 @@ public class Integration {
         }
     }
     
-    
+    // aaaaaa
     public static Func integrate(Func f, Variables.Variable differential) {
         if (f instanceof Addition.Sum(List<? extends Func> addends)) {
             Func[] integrals = addends.stream().map(func -> integrate(func, differential)).toArray(Func[]::new);
@@ -35,13 +32,12 @@ public class Integration {
             Const c = term.g().add(Constants.ONE);
             return term.create(term.coefficient().multiply(c.reciporical()), c);
         }
-        if (f instanceof Division.Quotient(Func numerator, Func denominator)) {
+        if (f instanceof Division.Quotient(Func numerator, Func denominator))
             if (numerator.equals(denominator.derivative()))
                 return Logarithms.ln(denominator);
             else if (Division.divide(Constants.ONE, denominator).equals(numerator.derivative())) {
                 return Multiplication.multiply(Constants.ONE_HALF, Powers.pow(numerator, Constants.TWO));
             }
-        }
         if (differential != Variables.X) {
             // TODO
         } else if (f instanceof SimpleIntegratableFunction sif) {
@@ -90,6 +86,29 @@ public class Integration {
                 }
             }
         }
-        return null;
+        return new FailedIntegral(f, differential);
+    }
+    
+    private record FailedIntegral(Func attempted, Variables.Variable differential) implements Func {
+        
+        @Override
+        public double eval(double x) {
+            return Double.NaN;
+        }
+        
+        @Override
+        public Variables.Variable termVariable() {
+            return Variables.X;
+        }
+        
+        @Override
+        public Func derivative() {
+            return this;
+        }
+        
+        @Override
+        public String toString() {
+            return "[INTEGRATION ERROR]";
+        }
     }
 }
