@@ -1,5 +1,14 @@
 package net.zepalesque.calc.function;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
+
 public class Powers {
     
     public static Func pow(Func base, Func exponent) {
@@ -12,6 +21,16 @@ public class Powers {
             return pow(pow.f(), Multiplication.multiply(pow.g(), exponent));
         else if (exponent instanceof Const c)
             if (c.equals(Constants.ZERO)) return base.equals(Constants.ZERO) ? Constants.NAN : Constants.ONE;
+            else if (c.equals(Constants.ONE)) return base;
+            else if (base instanceof Multiplication.Product(Set<Func> factors, List<Func> ignored) && factors.stream().anyMatch(func -> func instanceof Const)) {
+                Const multiplier = Constants.ONE;
+                List<Func> facsList = new ArrayList<>(factors.stream().toList());
+                for (Func fac : facsList)
+                    if (fac instanceof Const c1)
+                        multiplier = multiplier.multiply(c1);
+                multiplier = multiplier.pow(c);
+                return Multiplication.multiply(multiplier, pow(Multiplication.multiply(facsList.stream().filter(fac -> !(fac instanceof Const)).toArray(Func[]::new)), exponent));
+            }
             else if (c.equals(Constants.TWO))
                 return new Square(base);
             else if (c.equals(Constants.ONE_HALF))
@@ -31,7 +50,30 @@ public class Powers {
         Func g();
     }
     
-    record Square(Func f) implements PowerFunc {
+    interface Pow extends PowerFunc, SimpleIntegratableFunction {
+        @Override
+        Const g();
+        
+        @Override
+        default Func inner() {
+            return f();
+        }
+        
+        default Stream<Func> factor() {
+            if (g().value() < 1 && g().value() > 0) return Stream.of(this);
+            int full = (int) Math.round(g().value() % 1);
+            boolean negative = full < 0;
+            Const remainder = g().subtract(Constants.constant(full));
+            if (negative) full = -full;
+            Func[] facs = new Func[full + 1];
+            Func func = !negative ? f() : Division.divide(Constants.ONE, f());
+            Arrays.fill(facs, 0, full, func);
+            if (!remainder.equals(Constants.ZERO)) facs[full + 1] = remainder;
+            return Arrays.stream(facs).filter(Objects::nonNull);
+        }
+    }
+    
+    record Square(Func f) implements Pow {
         
         @Override
         public double eval(double x) {
@@ -49,7 +91,7 @@ public class Powers {
         }
         
         @Override
-        public Func g() {
+        public Const g() {
             return Constants.TWO;
         }
         
@@ -57,9 +99,29 @@ public class Powers {
         public String toString() {
             return String.format("(%s ^ 2)", f);
         }
+        
+        @Nullable
+        @Override
+        public Func integrateImpl() {
+            return Multiplication.multiply(Constants.ONE_HALF, f());
+        }
+        
+        @Nullable
+        @Override
+        public Func tryIntegrate(Func differential) {
+            if (f instanceof Trig.Sec(Func in)) {
+                if (in.derivative().equals(differential)) return Trig.tangent(in);
+            }
+            return Pow.super.tryIntegrate(differential);
+        }
+        
+        @Override
+        public Stream<Func> factor() {
+            return Stream.of(f(), f());
+        }
     }
     
-    record Sqrt(Func f) implements PowerFunc {
+    record Sqrt(Func f) implements Pow {
         @Override
         public double eval(double x) {
             return Math.sqrt(f.eval(x));
@@ -76,18 +138,29 @@ public class Powers {
         }
         
         @Override
-        public Func g() {
+        public Const g() {
             return Constants.ONE.divideBy(Constants.TWO);
+        }
+        
+        @Nullable
+        @Override
+        public Func integrateImpl() {
+            return Division.divide(Constants.TWO, this);
         }
         
         @Override
         public String toString() {
             return String.format("(√%s)", f);
         }
+        
+        @Override
+        public Stream<Func> factor() {
+            return Stream.of(this);
+        }
     }
     
     
-    record Power(Func f, Const g) implements PowerFunc {
+    record Power(Func f, Const g) implements Pow {
         @Override
         public double eval(double x) {
             return Math.pow(f.eval(x), g.value());
@@ -112,6 +185,12 @@ public class Powers {
         @Override
         public String toString() {
             return String.format("(%s ^ %s)", f, g);
+        }
+        
+        @Nullable
+        @Override
+        public Func integrateImpl() {
+            return Multiplication.multiply(g().reciporical(), power(f, g.subtract(Constants.ONE)));
         }
     }
     

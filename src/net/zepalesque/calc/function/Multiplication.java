@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,20 +15,40 @@ public class Multiplication {
         else if (factors.length == 1) return factors[0];
         Set<Func> numerators = new HashSet<>();
         Set<Func> denominators = new HashSet<>();
-        // TODO: Multiply all existing constants together
+        Const c = Constants.ONE;
+        Const d = Constants.ONE;
         for (Func f : factors) {
             if (f.equals(Constants.ONE)) continue;
-            if (f instanceof Product)
-                for (Func factor : factors)
-                    add(numerators, factor);
-            else if (f instanceof Division.Quotient(Func numerator, Func denominator)) {
+            if (f instanceof Product p) {
+                Set<Func> others = p.factors();
+                AtomicInteger i = new AtomicInteger(1);
+                return multiply(Stream.concat(others.stream(), Arrays.stream(factors).filter(func -> {
+                    if (i.get() == 1 && func.equals(p)) {
+                        i.decrementAndGet();
+                        return false;
+                    }
+                    else return true;
+                })).toArray(Func[]::new));
+/*                for (Func factor : factors) {
+                    if (factor instanceof Const c1) c = c.multiply(c1);
+                    else c.multiply(add(numerators, factor));
+                }*/
+            } else if (f instanceof Division.Quotient(Func numerator, Func denominator)) {
                 if (!numerator.equals(Constants.ONE))
-                    add(numerators, numerator);
-                add(denominators, denominator);
+                    c.multiply(add(numerators, numerator));
+                d.multiply(add(denominators, denominator));
             }
-            else add(numerators, f);
+            else if (f instanceof Const c1) c = c.multiply(c1);
+            else c.multiply(add(numerators, f));
+            
         }
-        
+        if (!c.equals(Constants.ONE)) {
+            Set<Func> cset = new HashSet<>();
+            cset.add(c);
+            cset.addAll(numerators);
+            numerators = cset;
+        }
+        if (c.equals(Constants.ZERO)) return Constants.ZERO;
         if (!denominators.isEmpty())
             return Division.divide(multiply(numerators.toArray(Func[]::new)), multiply(denominators.toArray(Func[]::new)));
         else {
@@ -36,9 +57,11 @@ public class Multiplication {
         }
     }
     
-    private static void add(Set<Func> funcs, Func toAdd, Const degree) {
+    // Returns any/all constant multipliers
+    private static Const add(Set<Func> funcs, Func toAdd, Const degree) {
+        if (toAdd instanceof Const c) return c.pow(degree);
         if (toAdd instanceof Powers.Power(Func f, Const g)) {
-            add(funcs, f, g);
+            return add(funcs, f, g);
         }
         if (funcs.contains(toAdd)) {
             funcs.remove(toAdd);
@@ -46,7 +69,7 @@ public class Multiplication {
         } else {
             List<Func> powers = funcs.stream().filter(func -> func instanceof Powers.Power(Func f, Const g) && f == toAdd).toList();
             if (powers.isEmpty())
-                funcs.add(toAdd);
+                funcs.add(Powers.pow(toAdd, degree));
             else {
                 Const deg = degree;
                 for (Func func : powers)
@@ -55,13 +78,18 @@ public class Multiplication {
                 funcs.add(Powers.pow(toAdd, deg));
             }
         }
+        return Constants.ONE;
     }
     
-    private static void add(Set<Func> funcs, Func toAdd) {
-        add(funcs, toAdd, Constants.ONE);
+    private static Const add(Set<Func> funcs, Func toAdd) {
+        return add(funcs, toAdd, Constants.ONE);
     }
     
-    record Product(Set<Func> factors) implements MultiTermFunction {
+    record Product(Set<Func> factors, List<Func> asList) implements MultiTermFunction {
+        
+        public Product(Set<Func> factors) {
+            this(factors, factors.stream().toList());
+        }
         
         public Product {
             if (factors.isEmpty()) throw new IllegalArgumentException("At least one argument is required");
@@ -73,6 +101,12 @@ public class Multiplication {
             for (Func f : factors) val *= f.eval(x);
             
             return val;
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Product)) return false;
+            else return factors.equals(((Product) obj).factors);
         }
         
         @Override

@@ -9,8 +9,8 @@ public class Division {
     public static Func divide(Func dividend, Func divisor) {
         if (dividend instanceof Const c1 && divisor instanceof Const c2) return c1.divideBy(c2);
         else if (dividend.equals(divisor)) return Constants.ONE;
-        else if (dividend instanceof Multiplication.Product(Set<Func> factors))
-            if (divisor instanceof Multiplication.Product(Set<Func> divisors)) {
+        else if (dividend instanceof Multiplication.Product(Set<Func> factors, List<Func> ignored))
+            if (divisor instanceof Multiplication.Product(Set<Func> divisors, List<Func> ignored1)) {
                 List<? extends Func> copy = factors.stream().toList();
                 for (Func d : divisors) {
                     AtomicInteger count = new AtomicInteger(1);

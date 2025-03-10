@@ -1,5 +1,6 @@
 package net.zepalesque.calc.function;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -43,18 +44,49 @@ public class Integration {
         }
         if (differential != Variables.X) {
             // TODO
-        } else if (f instanceof Multiplication.Product(Set<Func> factors)) {
+        } else if (f instanceof SimpleIntegratableFunction sif) {
+            Func integ = sif.tryIntegrate(Constants.ONE);
+            if (integ != null) return integ;
+        } else if (f instanceof Multiplication.Product(Set<Func> factors, List<Func> asList)) {
+            if (asList.size() == 1) {
+                Func fac = asList.stream().findFirst().orElse(null);
+                if (fac instanceof SimpleIntegratableFunction sif) {
+                    Func integ = sif.tryIntegrate(Constants.ONE);
+                    if (integ != null) return integ;
+                }
+            } else if (asList.size() == 2) {
+                for (int i = 0; i < 2; i++) {
+                    Func a = asList.get(i);
+                    Func b = asList.get(i == 0 ? 1 : 0);
+                    if (a instanceof SimpleIntegratableFunction sif) {
+                        Func integ = sif.tryIntegrate(b);
+                        if (integ != null) return integ;
+                    }
+                }
+            }
+            
             // TODO: check for certain predefined integral patterns multiplied an inner function's derivative
             //  then integrate again with a different differential (substituted) and simplify all replacements in the end
-            List<Func> facsList = factors.stream().toList();
+            Const c = Constants.ONE;
+            List<Func> facsList = new ArrayList<>(factors.stream().toList());
+            for (Func fac : facsList) {
+                if (fac instanceof Const c1) {
+                    c = c.multiply(c1);
+                }
+            }
+            facsList = facsList.stream().filter(fac -> !(fac instanceof Const)).flatMap(
+                func -> func instanceof Powers.Pow p ? p.factor() : Stream.of(func)
+            ).toList();
+            
             for (int test = 0; test < facsList.size(); test++) {
                 Func[] possibleDerivs = Stream.concat(
                     facsList.subList(0, test).stream(),
                     facsList.subList(test + 1, facsList.size()).stream()).toArray(Func[]::new);
                 Func possibleDeriv = Multiplication.multiply(possibleDerivs);
-                
-                if (f.derivative().equals(possibleDeriv)) {
-                    return Multiplication.multiply(Constants.ONE_HALF, Powers.pow(f, Constants.TWO));
+                Func f1 = facsList.get(test);
+                if (f1 instanceof SimpleIntegratableFunction sif) {
+                    Func integ = sif.tryIntegrate(possibleDeriv);
+                    if (integ != null) return integ;
                 }
             }
         }
