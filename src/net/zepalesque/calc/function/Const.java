@@ -14,13 +14,13 @@ public interface Const extends Func {
         return Constants.ZERO;
     }
     
-    default Const reciporical() {
-        return Constants.ONE.divideBy(this);
+    @Override
+    default Variables.Variable termVariable() {
+        return null;
     }
     
-    @Override
-    default boolean isZero() {
-        return this.equals(Constants.ZERO);
+    default Const reciporical() {
+        return Constants.ONE.divideBy(this);
     }
     
     Const negate();

@@ -1,13 +1,13 @@
 package net.zepalesque.calc.function;
 
-public interface Term<T extends Term<T>> extends Powers.PowerFunc {
+public interface Term extends Powers.PowerFunc {
     
     @Override
     default Func f() {
-       return create(coefficient(), Constants.ONE);
+       return Polynomials.X;
     }
     
-    default Func g() {
+    default Const g() {
         return power();
     }
     
@@ -15,5 +15,5 @@ public interface Term<T extends Term<T>> extends Powers.PowerFunc {
     
     Const power();
     
-    T create(Const coefficient, Const power);
+    Func create(Const coefficient, Const power);
 }

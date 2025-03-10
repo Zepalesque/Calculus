@@ -5,21 +5,20 @@ public class Powers {
     public static Func pow(Func base, Func exponent) {
         if (base instanceof Const c1 && exponent instanceof Const c2)
             return c1.pow(c2);
+        else if (base instanceof Polynomials.PTerm(Const coefficient, Const power)
+            && exponent instanceof Const c)
+            return Polynomials.term(coefficient.pow(c), power.multiply(c));
         else if (base instanceof PowerFunc pow)
             return pow(pow.f(), Multiplication.multiply(pow.g(), exponent));
         else if (exponent instanceof Const c)
-            if (c.equals(Constants.ZERO)) return base.isZero() ? Constants.NAN : Constants.ONE;
+            if (c.equals(Constants.ZERO)) return base.equals(Constants.ZERO) ? Constants.NAN : Constants.ONE;
             else if (c.equals(Constants.TWO))
                 return new Square(base);
             else if (c.equals(Constants.ONE_HALF))
                 return new Sqrt(base);
             else return new Power(base, c);
-        else if (exponent.isZero()) {
-            if (base.isZero()) return Constants.NAN;
-            return Constants.ONE;
-        }
         else if (base instanceof Const c) {
-            if (c.equals(Constants.ZERO)) return exponent.isZero() ? Constants.NAN : Constants.ZERO;
+            if (c.equals(Constants.ZERO)) return exponent.equals(Constants.ZERO) ? Constants.NAN : Constants.ZERO;
             if (base.equals(Constants.E))
                 return new EBaseExponent(exponent);
             else return new Exponential(c, exponent);
@@ -37,6 +36,11 @@ public class Powers {
         @Override
         public double eval(double x) {
             return f.eval(x) * f.eval(x);
+        }
+        
+        @Override
+        public Variables.Variable termVariable() {
+            return f.termVariable();
         }
         
         @Override
@@ -59,6 +63,11 @@ public class Powers {
         @Override
         public double eval(double x) {
             return Math.sqrt(f.eval(x));
+        }
+        
+        @Override
+        public Variables.Variable termVariable() {
+            return f.termVariable();
         }
         
         @Override
@@ -85,6 +94,11 @@ public class Powers {
         }
         
         @Override
+        public Variables.Variable termVariable() {
+            return f.termVariable();
+        }
+        
+        @Override
         public Func derivative() {
             return Multiplication.multiply(g, power(f, g.add(Constants.NEG_ONE)));
         }
@@ -108,6 +122,11 @@ public class Powers {
         }
         
         @Override
+        public Variables.Variable termVariable() {
+            return g.termVariable();
+        }
+        
+        @Override
         public Func derivative() {
             return Multiplication.multiply(this, g.derivative());
         }
@@ -125,6 +144,11 @@ public class Powers {
         }
         
         @Override
+        public Variables.Variable termVariable() {
+            return g.termVariable();
+        }
+        
+        @Override
         public Func derivative() {
             return Multiplication.multiply(this, g.derivative(), f.ln());
         }
@@ -136,6 +160,12 @@ public class Powers {
         @Override
         public double eval(double x) {
             return Math.pow(f.eval(x), g.eval(x));
+        }
+        
+        @Override
+        public Variables.Variable termVariable() {
+            if (f.termVariable().equals(g.termVariable())) return f.termVariable();
+            else return Variables.X;
         }
         
         @Override

@@ -11,10 +11,12 @@ public class Addition {
         Const c = Constants.ZERO;
         for (Func f : funcs)
             if (f instanceof Const c1) c = c.add(c1);
-            else if (f instanceof Sum(List<? extends Func> addends1)) for (Func f1 : addends1)
+            else if (f instanceof Sum(List<? extends Func> addends1))
+                for (Func f1 : addends1) {
                 if (f1 instanceof Const c2) c = c.add(c2);
-                else if (!f1.isZero()) addends.add(f1);
-                else if (!f.isZero()) addends.add(f);
+                else if (!f1.equals(Constants.ZERO)) addends.add(f1);
+            }
+            else if (!f.equals(Constants.ZERO)) addends.add(f);
         if (!c.equals(Constants.ZERO)) addends.add(c);
         if (addends.isEmpty()) return Constants.ZERO;
         if (addends.size() == 1) return addends.getFirst();
@@ -37,12 +39,25 @@ public class Addition {
         }
         
         @Override
+        public Variables.Variable termVariable() {
+            Variables.Variable var = null;
+            boolean success = true;
+            for (Func f : addends) {
+                if (f instanceof Const) continue;
+                Variables.Variable var2 = f.termVariable();
+                if (var == null) var = var2;
+                else if (!var2.equals(var)) success = false;
+            }
+            return success ? var : Variables.X;
+        }
+        
+        @Override
         public Func derivative() {
             Func[] derivs = new Func[addends.size()];
             for (int i = 0; i < addends.size(); i++)
                 derivs[i] = addends.get(i).derivative();
             List<Func> derivList = new ArrayList<>(List.of(derivs));
-            derivList.removeIf(Func::isZero);
+            derivList.removeIf(func -> func.equals(Constants.ZERO));
             if (derivList.isEmpty()) return Constants.ZERO;
             return add(derivList.toArray(Func[]::new));
         }

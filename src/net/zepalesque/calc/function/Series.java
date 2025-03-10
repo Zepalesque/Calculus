@@ -6,7 +6,7 @@ import java.util.List;
 
 @Deprecated
 public class Series {
-    
+ /*
     public record TaylorSeries(Func f, char originalID) {
         
         public Func approximate(Const center, int degree) {
@@ -74,5 +74,5 @@ public class Series {
         public Func derivative() {
             return new TaylorSeriesHolder(f.derivative(), precision, derivativeNum + 1, originalID);
         }
-    }
+    }*/
 }

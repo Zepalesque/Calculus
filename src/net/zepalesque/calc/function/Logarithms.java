@@ -4,7 +4,6 @@ public class Logarithms {
     
     public static Func ln(Func f) {
         if (f instanceof Const c) return c.ln();
-        else if (f.isZero()) return Constants.NEG_INF;
         else return new NaturalLog(f);
     }
     
@@ -23,6 +22,11 @@ public class Logarithms {
         @Override
         public double eval(double x) {
             return Math.log(f().eval(x));
+        }
+        
+        @Override
+        public Variables.Variable termVariable() {
+            return f.termVariable();
         }
         
         @Override

@@ -1,6 +1,7 @@
 package net.zepalesque.calc.function;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Division {
@@ -8,8 +9,8 @@ public class Division {
     public static Func divide(Func dividend, Func divisor) {
         if (dividend instanceof Const c1 && divisor instanceof Const c2) return c1.divideBy(c2);
         else if (dividend.equals(divisor)) return Constants.ONE;
-        else if (dividend instanceof Multiplication.Product(List<? extends Func> factors))
-            if (divisor instanceof Multiplication.Product(List<? extends Func> divisors)) {
+        else if (dividend instanceof Multiplication.Product(Set<Func> factors))
+            if (divisor instanceof Multiplication.Product(Set<Func> divisors)) {
                 List<? extends Func> copy = factors.stream().toList();
                 for (Func d : divisors) {
                     AtomicInteger count = new AtomicInteger(1);
@@ -37,6 +38,12 @@ public class Division {
         @Override
         public double eval(double x) {
             return numerator.eval(x) / denominator.eval(x);
+        }
+        
+        @Override
+        public Variables.Variable termVariable() {
+            if (numerator.termVariable().equals(denominator.termVariable())) return numerator.termVariable();
+            else return Variables.X;
         }
         
         @Override

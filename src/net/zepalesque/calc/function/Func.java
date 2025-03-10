@@ -2,11 +2,9 @@ package net.zepalesque.calc.function;
 
 public interface Func {
     
-    default boolean isZero() {
-        return false;
-    }
-    
     double eval(double x);
+    
+    Variables.Variable termVariable();
     
     Func derivative();
     
@@ -18,6 +16,11 @@ public interface Func {
         @Override
         public double eval(double x) {
             return -func.eval(x);
+        }
+        
+        @Override
+        public Variables.Variable termVariable() {
+            return this.func().termVariable();
         }
         
         @Override
