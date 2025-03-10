@@ -14,6 +14,10 @@ import net.zepalesque.calc.function.Trig;
 // TODO: trig functions, INTEGRATION (if i can figure it out lmao), more logarithms,
 //  system for 'real constants' that can be represented by an integer over an integer,
 //  storing the ints to allow simplification without computation of the function (avoids floating point precision stuff)
+
+// TODO (continued...): redo most stuff perhaps, use SimpleIntegratableFunction earlier in development
+//  also implement u-substitution, integration by parts, etc
+
 public class Calculus {
     
     public static void main(String[] args) {
@@ -39,7 +43,8 @@ public class Calculus {
         Func secant = Trig.secant(x);
         Func secSquared = Powers.pow(secant, Constants.TWO);
         printDifferentiateAndIntegrate(secSquared, 'k');
-        System.out.println("Note that (sec(x) ^ 2) = (tan(x) ^ 2) + 1, so thanks to the arbitrary constant of integration, C, these are equivalent.\n");
+        System.out.println("Note that (sec(x) ^ 2) = (tan(x) ^ 2) + 1, so thanks to the arbitrary constant of integration, C, these are equivalent.");
+        System.out.println();
     }
     
     public static void printFuncAndDerivative(Func f, char id) {
