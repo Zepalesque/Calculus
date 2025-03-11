@@ -25,9 +25,7 @@ public class Integration {
         if (f instanceof Addition.Sum(List<? extends Func> addends)) {
             Func[] integrals = addends.stream().map(func -> integrate(func, differential)).toArray(Func[]::new);
             return Addition.add(integrals);
-        } else if (f instanceof Const c) {
-            return Multiplication.multiply(c, differential.function());
-        }
+        } else if (f instanceof Const c) return Multiplication.multiply(c, differential.function());
         else if (f instanceof Term term) {
             Const c = term.g().add(Constants.ONE);
             return term.create(term.coefficient().multiply(c.reciporical()), c);
@@ -35,9 +33,8 @@ public class Integration {
         if (f instanceof Division.Quotient(Func numerator, Func denominator))
             if (numerator.equals(denominator.derivative()))
                 return Logarithms.ln(denominator);
-            else if (Division.divide(Constants.ONE, denominator).equals(numerator.derivative())) {
+            else if (Division.divide(Constants.ONE, denominator).equals(numerator.derivative()))
                 return Multiplication.multiply(Constants.ONE_HALF, Powers.pow(numerator, Constants.TWO));
-            }
         if (differential != Variables.X) {
             // TODO
         } else if (f instanceof SimpleIntegratableFunction sif) {
@@ -50,14 +47,12 @@ public class Integration {
                     Func integ = sif.tryIntegrate(Constants.ONE);
                     if (integ != null) return integ;
                 }
-            } else if (asList.size() == 2) {
-                for (int i = 0; i < 2; i++) {
-                    Func a = asList.get(i);
-                    Func b = asList.get(i == 0 ? 1 : 0);
-                    if (a instanceof SimpleIntegratableFunction sif) {
-                        Func integ = sif.tryIntegrate(b);
-                        if (integ != null) return integ;
-                    }
+            } else if (asList.size() == 2) for (int i = 0; i < 2; i++) {
+                Func a = asList.get(i);
+                Func b = asList.get(i == 0 ? 1 : 0);
+                if (a instanceof SimpleIntegratableFunction sif) {
+                    Func integ = sif.tryIntegrate(b);
+                    if (integ != null) return integ;
                 }
             }
             
@@ -65,11 +60,9 @@ public class Integration {
             //  then integrate again with a different differential (substituted) and simplify all replacements in the end
             Const c = Constants.ONE;
             List<Func> facsList = new ArrayList<>(factors.stream().toList());
-            for (Func fac : facsList) {
-                if (fac instanceof Const c1) {
+            for (Func fac : facsList)
+                if (fac instanceof Const c1)
                     c = c.multiply(c1);
-                }
-            }
             facsList = facsList.stream().filter(fac -> !(fac instanceof Const)).flatMap(
                 func -> func instanceof Powers.Pow p ? p.factor() : Stream.of(func)
             ).toList();

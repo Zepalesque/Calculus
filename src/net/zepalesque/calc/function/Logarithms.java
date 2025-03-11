@@ -1,5 +1,7 @@
 package net.zepalesque.calc.function;
 
+import org.jetbrains.annotations.Nullable;
+
 public class Logarithms {
     
     public static Func ln(Func f) {
@@ -12,7 +14,7 @@ public class Logarithms {
         Func f();
     }
     
-    record NaturalLog(Func f) implements Logarithmic {
+    record NaturalLog(Func f) implements Logarithmic, SimpleIntegratableFunction {
         
         @Override
         public Func base() {
@@ -37,6 +39,17 @@ public class Logarithms {
         @Override
         public String toString() {
             return String.format("ln(%s)", f());
+        }
+        
+        @Override
+        public Func inner() {
+            return f();
+        }
+        
+        @Nullable
+        @Override
+        public Func integrateImpl() {
+            return Addition.add(Multiplication.multiply(f(), this), f().negate());
         }
     }
 }
