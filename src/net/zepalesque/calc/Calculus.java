@@ -40,7 +40,7 @@ public class Calculus {
         
         Const v = Constants.THREE;
         Const calc = xlnxMinusX.eval(v);
-        System.out.printf("f_1(%s) = %s = %f\nd (double value)", v, calc, calc.value());
+        System.out.printf("f_1(%s) = %s = %fd (double value)\n", v, calc, calc.value());
         
         Func lnxOverX = Division.divide(Logarithms.ln(x), x);
         printFuncAndAntiderivative(lnxOverX, "f_2");
