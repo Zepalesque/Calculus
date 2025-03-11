@@ -1,6 +1,7 @@
 package net.zepalesque.calc;
 
 import net.zepalesque.calc.function.Addition;
+import net.zepalesque.calc.function.Const;
 import net.zepalesque.calc.function.Constants;
 import net.zepalesque.calc.function.Division;
 import net.zepalesque.calc.function.Func;
@@ -36,6 +37,10 @@ public class Calculus {
         Func x = Polynomials.X;
         Func xlnxMinusX = Addition.add(Multiplication.multiply(x, Logarithms.ln(x)), x.negate());
         printFuncAndDerivative(xlnxMinusX, "f_1");
+        
+        Const v = Constants.THREE;
+        Const calc = xlnxMinusX.eval(v);
+        System.out.printf("f_1(%s) = %s = %f\nd (double value)", v, calc, calc.value());
         
         Func lnxOverX = Division.divide(Logarithms.ln(x), x);
         printFuncAndAntiderivative(lnxOverX, "f_2");

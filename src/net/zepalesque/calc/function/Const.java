@@ -5,8 +5,9 @@ public interface Const extends Func {
     
     double value();
     
-    default double eval(double x) {
-        return value();
+    @Override
+    default Const eval(Const x) {
+        return this;
     }
     
     @Override

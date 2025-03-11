@@ -96,9 +96,9 @@ public class Multiplication {
         }
         
         @Override
-        public double eval(double x) {
-            double val = 1;
-            for (Func f : factors) val *= f.eval(x);
+        public Const eval(Const x) {
+            Const val = Constants.ONE;
+            for (Func f : factors) val = val.multiply(f.eval(x));
             
             return val;
         }

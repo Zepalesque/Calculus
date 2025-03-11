@@ -36,8 +36,8 @@ public class Division {
     record Quotient(Func numerator, Func denominator) implements Func {
         
         @Override
-        public double eval(double x) {
-            return numerator.eval(x) / denominator.eval(x);
+        public Const eval(Const x) {
+            return numerator.eval(x).divideBy(denominator.eval(x));
         }
         
         @Override

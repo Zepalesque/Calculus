@@ -31,9 +31,9 @@ public class Addition {
         }
         
         @Override
-        public double eval(double x) {
-            double val = 0;
-            for (Func f : addends) val += f.eval(x);
+        public Const eval(Const x) {
+            Const val = Constants.ZERO;
+            for (Func f : addends) val = val.add(f.eval(x));
             
             return val;
         }

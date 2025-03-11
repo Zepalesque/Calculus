@@ -85,8 +85,8 @@ public class Integration {
     private record FailedIntegral(Func attempted, Variables.Variable differential) implements Func {
         
         @Override
-        public double eval(double x) {
-            return Double.NaN;
+        public Const eval(Const x) {
+            return Constants.NAN;
         }
         
         @Override

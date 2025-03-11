@@ -22,8 +22,8 @@ public class Logarithms {
         }
         
         @Override
-        public double eval(double x) {
-            return Math.log(f().eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).ln();
         }
         
         @Override

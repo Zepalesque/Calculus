@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Constants {
-    public static final DecimalFormat FORMAT = new DecimalFormat("#.##");
+    public static final DecimalFormat FORMAT = new DecimalFormat("#.####");
     
     private static final Map<Double, Const> CONSTANTS = new HashMap<>();
     private static final Map<String, Const> NAMED_CONSTANTS = new HashMap<>();

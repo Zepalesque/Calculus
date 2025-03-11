@@ -46,7 +46,7 @@ public class Variables {
         }
         
         @Override
-        public double eval(double x) {
+        public Const eval(Const x) {
             return this.function().eval(x);
         }
     }
@@ -79,7 +79,7 @@ public class Variables {
         }
         
         @Override
-        public double eval(double x) {
+        public Const eval(Const x) {
             return x;
         }
         

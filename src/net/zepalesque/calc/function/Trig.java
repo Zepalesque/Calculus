@@ -6,8 +6,8 @@ public class Trig {
     
     interface TrigFunc extends SimpleIntegratableFunction {
         Func f();
-        Func reciporical();
         
+        Func reciporical();
         
         @Override
         default Variables.Variable termVariable() {
@@ -60,8 +60,8 @@ public class Trig {
     record Sin(Func f) implements TrigFunc {
         
         @Override
-        public double eval(double x) {
-            return Math.sin(f.eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).sin();
         }
         
         @Override
@@ -89,8 +89,8 @@ public class Trig {
     
     record Cos(Func f) implements TrigFunc {
         @Override
-        public double eval(double x) {
-            return Math.cos(f.eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).cos();
         }
         
         @Override
@@ -117,8 +117,8 @@ public class Trig {
     
     record Tan(Func f) implements TrigFunc {
         @Override
-        public double eval(double x) {
-            return Math.tan(f.eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).tan();
         }
         
         @Override
@@ -148,8 +148,8 @@ public class Trig {
     record Csc(Func f) implements TrigFunc {
         
         @Override
-        public double eval(double x) {
-            return 1 / Math.sin(f.eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).csc();
         }
         
         @Override
@@ -181,8 +181,8 @@ public class Trig {
     record Sec(Func f) implements TrigFunc {
         
         @Override
-        public double eval(double x) {
-            return 1 / Math.cos(f.eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).sec();
         }
         
         @Override
@@ -213,8 +213,8 @@ public class Trig {
     record Cot(Func f) implements TrigFunc {
         
         @Override
-        public double eval(double x) {
-            return 1 / Math.tan(f.eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).cot();
         }
         
         @Override

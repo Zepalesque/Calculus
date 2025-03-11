@@ -2,7 +2,7 @@ package net.zepalesque.calc.function;
 
 public interface Func {
     
-    double eval(double x);
+    Const eval(Const x);
     
     Variables.Variable termVariable();
     
@@ -14,8 +14,8 @@ public interface Func {
     
     record Negation(Func func) implements Func {
         @Override
-        public double eval(double x) {
-            return -func.eval(x);
+        public Const eval(Const x) {
+            return func.eval(x).negate();
         }
         
         @Override

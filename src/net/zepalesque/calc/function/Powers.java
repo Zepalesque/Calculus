@@ -76,8 +76,9 @@ public class Powers {
     record Square(Func f) implements Pow {
         
         @Override
-        public double eval(double x) {
-            return f.eval(x) * f.eval(x);
+        public Const eval(Const x) {
+            Const inner = f.eval(x);
+            return inner.multiply(inner);
         }
         
         @Override
@@ -123,8 +124,8 @@ public class Powers {
     
     record Sqrt(Func f) implements Pow {
         @Override
-        public double eval(double x) {
-            return Math.sqrt(f.eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).sqrt();
         }
         
         @Override
@@ -162,8 +163,8 @@ public class Powers {
     
     record Power(Func f, Const g) implements Pow {
         @Override
-        public double eval(double x) {
-            return Math.pow(f.eval(x), g.value());
+        public Const eval(Const x) {
+            return f.eval(x).pow(g);
         }
         
         @Override
@@ -196,8 +197,8 @@ public class Powers {
     
     record EBaseExponent(Func g) implements PowerFunc {
         @Override
-        public double eval(double x) {
-            return Math.exp(g.eval(x));
+        public Const eval(Const x) {
+            return g.eval(x).exp();
         }
         
         @Override
@@ -218,8 +219,8 @@ public class Powers {
     
     record Exponential(Const f, Func g) implements PowerFunc {
         @Override
-        public double eval(double x) {
-            return Math.pow(f.value(), g.eval(x));
+        public Const eval(Const x) {
+            return f.pow(g.eval(x));
         }
         
         @Override
@@ -237,8 +238,8 @@ public class Powers {
     record FPowG(Func f, Func g) implements PowerFunc {
         
         @Override
-        public double eval(double x) {
-            return Math.pow(f.eval(x), g.eval(x));
+        public Const eval(Const x) {
+            return f.eval(x).pow(g.eval(x));
         }
         
         @Override

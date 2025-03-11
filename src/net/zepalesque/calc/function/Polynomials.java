@@ -14,8 +14,8 @@ public class Polynomials {
     
     public record PTerm(Const coefficient, Const power) implements Term {
         
-        public double eval(double x) {
-            return Math.pow(x, power.value()) * coefficient.value();
+        public Const eval(Const x) {
+            return x.pow(power).multiply(coefficient);
         }
         
         @Override
