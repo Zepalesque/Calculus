@@ -208,8 +208,9 @@ public class Integration {
                 .map(SimpleIntegratableFunction.class::cast).toList();
             if (integratables.size() == 1) {
                 SimpleIntegratableFunction f = integratables.getFirst();
-                Variables.Variable var = Variables.of(Multiplication.multiply(f, derivMult.reciporical()), Variables.getNextForDifferential(differential.identifier()));
-                return integrate(var, var);
+                Func attempt = f.tryIntegrate(Multiplication.multiply(nonConstDerivs.toArray(Func[]::new)));
+                if (attempt != null) return attempt;
+                // else try parts
             }
             Optional<SimpleIntegratableFunction> extract = integratables.stream().findFirst();
             if (extract.isPresent()) {
@@ -224,8 +225,16 @@ public class Integration {
                         Func result = substituted.stream().anyMatch(Objects::isNull)
                             ? null : integrate(Multiplication.multiply(substituted.toArray(Func[]::new)), var);
                         if (result != null && !(result instanceof FailedIntegral)) return result;
+                        // else try parts
                     }
-                }/* else if (deriv.equals(Multiplication.multiply(nonConstDerivs.toArray(Func[]::new)))) {
+                } else if (integratables.size() == 1) {
+                    SimpleIntegratableFunction f = integratables.getFirst();
+                    Func attempt = f.tryIntegrate(Multiplication.multiply(nonConstDerivs.toArray(Func[]::new)));
+                    if (attempt != null) return attempt;
+                    // else try parts
+                }
+                
+                /* else if (deriv.equals(Multiplication.multiply(nonConstDerivs.toArray(Func[]::new)))) {
                     Variables.Variable var = Variables.of(Multiplication.multiply(inner, derivMult.reciporical()), Variables.getNextForDifferential(differential.identifier()));
                     List<@Nullable Func> substituted = integratables.stream().map(sif -> sif.substitute(var, func -> func.equals(inner))).toList();
                     Func result = substituted.stream().anyMatch(Objects::isNull)
