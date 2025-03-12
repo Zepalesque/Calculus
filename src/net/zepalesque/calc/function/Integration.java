@@ -1,5 +1,6 @@
 package net.zepalesque.calc.function;
 
+import net.zepalesque.calc.Calculus;
 import net.zepalesque.calc.Factorable;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +17,7 @@ public class Integration {
         
         @Override
         public String toString() {
-            return String.format("∫ %s %s", func, differential.differential());
+            return String.format("∫ %s %s", Calculus.noParenthesisString(func), differential.differential());
         }
         
         public Func integrate() {

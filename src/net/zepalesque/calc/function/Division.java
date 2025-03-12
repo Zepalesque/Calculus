@@ -34,7 +34,7 @@ public class Division {
         return new Quotient(dividend, divisor);
     }
     
-    record Quotient(Func numerator, Func denominator) implements Func {
+    record Quotient(Func numerator, Func denominator) implements ParenthesisHeldFunction {
         
         @Override
         public Const eval(Const x) {
@@ -65,8 +65,13 @@ public class Division {
         }
         
         @Override
+        public String internalString() {
+            return String.format("%s / %s", numerator, denominator);
+        }
+        
+        @Override
         public String toString() {
-            return String.format("(%s / %s)", numerator, denominator);
+            return String.format("(%s)", internalString());
         }
     }
 }

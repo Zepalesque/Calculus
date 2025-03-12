@@ -321,6 +321,9 @@ public class Constants {
         
         @Override
         public String toString() {
+            if (this.value() % 1 != 0 && this.reciporical().value() % 1 == 0) {
+                return String.format("1/%s", this.reciporical());
+            }
             return FORMAT.format(this.value);
         }
     }

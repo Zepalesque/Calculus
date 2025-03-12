@@ -39,11 +39,13 @@ public class Polynomials {
                 return String.format("%s", coefficient);
             } else if (power.equals(Constants.ONE)) {
                 if (coefficient().equals(Constants.ONE)) return String.format("%s", var);
+                else if (coefficient().equals(Constants.NEG_ONE)) return String.format("-%s", var);
                 return String.format("%s%s", coefficient, var);
             } else if (coefficient().equals(Constants.ONE) && !power.equals(Constants.ONE)) {
                 return String.format("%s^%s", var, power);
             } else {
-            return String.format("%s%s^%s", coefficient, var, power);
+                if (coefficient().equals(Constants.NEG_ONE)) return String.format("-%s^%s", var, power);
+                return String.format("%s%s^%s", coefficient, var, power);
             }
         }
         

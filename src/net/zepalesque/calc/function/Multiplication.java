@@ -21,8 +21,13 @@ public class Multiplication {
         Set<Func> denominators = new HashSet<>();
         Const c = Constants.ONE;
         Const d = Constants.ONE;
+        boolean negative = false;
         for (Func f : factors) {
             if (f.equals(Constants.ONE)) continue;
+            if (f instanceof Func.Negation(Func func)) {
+                negative = !negative;
+                f = func;
+            }
             if (f instanceof Product p) {
                 Set<Func> others = p.factors();
                 AtomicInteger i = new AtomicInteger(1);
@@ -45,6 +50,7 @@ public class Multiplication {
             else if (f instanceof Const c1) c = c.multiply(c1);
             else c.multiply(add(numerators, f));
         }
+        if (negative) c = c.negate();
         if (!c.equals(Constants.ONE)) {
             Set<Func> cset = new HashSet<>();
             cset.add(c);
@@ -158,13 +164,19 @@ public class Multiplication {
         public String internalString() {
             List<Func> funcs = factors.stream().map(Multiplication::multiply).toList();
             StringBuilder sb = new StringBuilder();
-            sb.append(funcs.getFirst());
+            Func first = funcs.getFirst();
+            if (first.equals(Constants.NEG_ONE)) sb.append("-");
+            else {
+                sb.append(first);
+                sb.append(" * ");
+            }
             for (int i = 1; i < funcs.size(); i++) {
                 Func f = funcs.get(i);
                 String s = f instanceof Powers.Pow pow ? pow.internalString() : f.toString();
                 
-                sb.append(" * ");
                 sb.append(s);
+                
+                if (i != funcs.size() - 1) sb.append(" * ");
                 
             }
             return sb.toString();
