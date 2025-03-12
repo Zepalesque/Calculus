@@ -34,7 +34,7 @@ public class Polynomials {
             return new PTerm(power.multiply(coefficient), var, power.add(Constants.ONE.negate()));
         }
         
-        public String toString() {
+        public String internalString() {
             if (power.equals(Constants.ZERO) || coefficient.equals(Constants.ZERO)) {
                 return String.format("%s", coefficient);
             } else if (power.equals(Constants.ONE)) {
@@ -87,6 +87,11 @@ public class Polynomials {
             } else {
                 return Multiplication.multiply(coefficient, Powers.pow(var, power));
             }
+        }
+        
+        @Override
+        public String toString() {
+            return internalString();
         }
     }
 }

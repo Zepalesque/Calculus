@@ -27,7 +27,7 @@ public class Addition {
     }
     
     // Polynomial, or otherwise
-    record Sum(List<? extends Func> addends) implements MultiTermFunction {
+    record Sum(List<? extends Func> addends) implements ParenthesisHeldFunction {
         
         public Sum {
             if (addends.isEmpty()) throw new IllegalArgumentException("At least one argument is required");

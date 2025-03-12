@@ -10,7 +10,7 @@ public interface SimpleIntegratableFunction extends Func {
     @Nullable
     default Func tryIntegrate(Func differential) {
         if (differential.equals(Multiplication.multiply(this.derivative(), inner().derivative()))) {
-            return Powers.pow(this, Constants.TWO);
+            return Multiplication.multiply(Constants.ONE_HALF, Powers.pow(this, Constants.TWO));
         }
         if (inner().derivative().equals(differential)) return integrateImpl();
         return null;

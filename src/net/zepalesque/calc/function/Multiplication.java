@@ -88,7 +88,7 @@ public class Multiplication {
         return add(funcs, toAdd, Constants.ONE);
     }
     
-    record Product(Set<Func> factors, List<Func> asList) implements MultiTermFunction, Factorable {
+    record Product(Set<Func> factors, List<Func> asList) implements ParenthesisHeldFunction, Factorable {
         
         public Product(Set<Func> factors) {
             this(factors, factors.stream().toList());
@@ -160,7 +160,8 @@ public class Multiplication {
             StringBuilder sb = new StringBuilder();
             sb.append(funcs.getFirst());
             for (int i = 1; i < funcs.size(); i++) {
-                String s = funcs.get(i).toString();
+                Func f = funcs.get(i);
+                String s = f instanceof Powers.Pow pow ? pow.internalString() : f.toString();
                 
                 sb.append(" * ");
                 sb.append(s);

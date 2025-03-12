@@ -50,7 +50,7 @@ public class Powers {
         else return new FPowG(base, exponent);
     }
     
-    interface PowerFunc extends Func {
+    interface PowerFunc extends Func, ParenthesisHeldFunction {
         Func f();
         Func g();
     }
@@ -112,8 +112,8 @@ public class Powers {
         }
         
         @Override
-        public String toString() {
-            return String.format("(%s ^ 2)", f);
+        public String internalString() {
+            return String.format("%s^2", f);
         }
         
         @Nullable
@@ -134,6 +134,11 @@ public class Powers {
         @Override
         public List<Func> factor() {
             return List.of(f(), f());
+        }
+        
+        @Override
+        public String toString() {
+            return String.format("(%s)", internalString());
         }
     }
     
@@ -165,8 +170,13 @@ public class Powers {
         }
         
         @Override
+        public String internalString() {
+            return String.format("√%s", f);
+        }
+        
+        @Override
         public String toString() {
-            return String.format("(√%s)", f);
+            return String.format("(%s)", internalString());
         }
         
         @Override
@@ -199,8 +209,13 @@ public class Powers {
         }
         
         @Override
+        public String internalString() {
+            return String.format("%s^%s", f, g);
+        }
+        
+        @Override
         public String toString() {
-            return String.format("(%s ^ %s)", f, g);
+            return String.format("(%s)", internalString());
         }
         
         @Nullable
@@ -237,6 +252,16 @@ public class Powers {
         public Func f() {
             return Constants.E;
         }
+        
+        @Override
+        public String toString() {
+            return String.format("(%s)", internalString());
+        }
+        
+        @Override
+        public String internalString() {
+            return String.format("e^%s", g());
+        }
     }
     
     record Exponential(Const f, Func g) implements PowerFunc {
@@ -261,6 +286,16 @@ public class Powers {
             if (gs != null) return pow(f(), gs);
             else return null;
         }
+        
+        @Override
+        public String internalString() {
+            return String.format("%s^%s", f(), g());
+        }
+        
+        @Override
+        public String toString() {
+            return String.format("(%s)", internalString());
+        }
     }
     
     
@@ -283,8 +318,13 @@ public class Powers {
         }
         
         @Override
+        public String internalString() {
+            return String.format("%s^%s", f(), g());
+        }
+        
+        @Override
         public String toString() {
-            return String.format("(%s ^ %s)", f, g);
+            return String.format("(%s)", internalString());
         }
         
         @Override
