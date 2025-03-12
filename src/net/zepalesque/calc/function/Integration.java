@@ -20,7 +20,7 @@ public class Integration {
         }
         
         public Func integrate() {
-            Func f = Integration.integrate(func, differential);
+            Func f = Integration.integrate(func, differential, null);
             if (f != null) {
                 if (!(f instanceof FailedIntegral)) {
                     if (f.termVariable().equals(differential)) return f;
@@ -40,25 +40,28 @@ public class Integration {
     }
     
     // aaaaaa
-    public static Func integrate(Func f, Variables.Variable differential) {
-        if (f.equals(differential)) return Polynomials.term(Constants.ONE_HALF, differential, Constants.TWO);
-        if (f instanceof Addition.Sum(List<? extends Func> addends)) {
-            Func[] integrals = addends.stream().map(func -> integrate(func, differential)).toArray(Func[]::new);
+    public static Func integrate(Func integrand, Variables.Variable differential, @Nullable Func outermostIn) {
+        if (outermostIn == null) outermostIn = integrand;
+        final Func outermostIntegrand = outermostIn;
+        if (integrand.equals(differential)) return Polynomials.term(Constants.ONE_HALF, differential, Constants.TWO);
+        if (integrand instanceof Addition.Sum(List<? extends Func> addends)) {
+            // for addition, parts should use the individual term integrand, so input outermostIn should be input as null
+            Func[] integrals = addends.stream().map(func -> integrate(func, differential, null)).toArray(Func[]::new);
             return Addition.add(integrals);
-        } else if (f instanceof Const c) return Multiplication.multiply(c, differential.function());
-        else if (f instanceof Term term) {
+        } else if (integrand instanceof Const c) return Multiplication.multiply(c, differential.function());
+        else if (integrand instanceof Term term) {
             Const c = term.g().add(Constants.ONE);
             return term.create(term.coefficient().multiply(c.reciporical()), c);
         }
-        if (f instanceof Division.Quotient(Func numerator, Func denominator))
+        if (integrand instanceof Division.Quotient(Func numerator, Func denominator))
             if (numerator.equals(denominator.derivative()))
                 return Logarithms.ln(denominator);
             else if (Division.divide(Constants.ONE, denominator).equals(numerator.derivative()))
                 return Multiplication.multiply(Constants.ONE_HALF, Powers.pow(numerator, Constants.TWO));
-        if (f instanceof SimpleIntegratableFunction sif) {
+        if (integrand instanceof SimpleIntegratableFunction sif) {
             Func integ = sif.tryIntegrate(Constants.ONE);
             if (integ != null) return integ;
-        } else if (f instanceof Factorable factorable) {
+        } else if (integrand instanceof Factorable factorable) {
             List<Func> factors = factorable.factor();
             if (factors.size() == 1) {
                 Func fac = factors.stream().findFirst().orElse(null);
@@ -76,7 +79,7 @@ public class Integration {
             } else {
                 Const c = factors.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
                 List<Func> nonConst = factors.stream().filter(func -> !(func instanceof Const)).toList();
-                Func tryInteg = tryToIntegrate(nonConst, differential, f, c);
+                Func tryInteg = tryToIntegrate(nonConst, differential, outermostIntegrand);
                 if (tryInteg != null) return Multiplication.multiply(tryInteg, c);
             }
             
@@ -119,7 +122,7 @@ public class Integration {
                 }
             }
         }*/
-        return new FailedIntegral(f, differential);
+        return new FailedIntegral(integrand, differential);
     }
     
     private record FailedIntegral(Func attempted, Variables.Variable differential) implements Func {
@@ -156,10 +159,10 @@ public class Integration {
     
     // checks all subsets of a list of functions, and see if they're all integrable and their inner functions' derivatives all equal the other funcs
     @Nullable
-    private static Func tryToIntegrate(List<Func> list, Variables.Variable differential, Func original, Const multiplier) {
+    private static Func tryToIntegrate(List<Func> list, Variables.Variable differential, Func outermostIntegrand) {
         if (list.size() > Long.SIZE) {
             // the long way /:
-            return tryIntegLongList(list, differential, original);
+            return tryIntegLongList(list, differential, outermostIntegrand);
         } else {
             long adder = 1;
             do {
@@ -172,7 +175,7 @@ public class Integration {
                 List<Func> possibleDerivs = Arrays.stream(sub2).filter(Objects::nonNull).toList();
                 List<Func> nonConstDerivs = possibleDerivs.stream().filter(func -> !(func instanceof Const) && func != null).toList();
                 Const derivMult = possibleDerivs.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
-                @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, original);
+                @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand);
                 if (possibleResult != null) return possibleResult;
                 adder++;
             } while (adder < Math.pow(2, list.size()));
@@ -181,7 +184,7 @@ public class Integration {
     }
     
     @Nullable
-    private static Func tryIntegLongList(List<Func> list, Variables.Variable differential, Func original) {
+    private static Func tryIntegLongList(List<Func> list, Variables.Variable differential, Func outermostIntegrand) {
         boolean[] current = new boolean[list.size()];
         current[list.size() - 1] = true;
         do {
@@ -195,14 +198,14 @@ public class Integration {
             List<Func> possibleDerivs = Arrays.stream(sub2).filter(Objects::nonNull).toList();
             List<Func> nonConstDerivs = possibleDerivs.stream().filter(func -> !(func instanceof Const) && func != null).toList();
             Const derivMult = possibleDerivs.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
-            @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, original);
+            @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand);
             if (possibleResult != null) return possibleResult;
         } while (addOne(current));
         return null;
     }
     
     @Nullable
-    private static Func integListImpl(List<Func> tested, List<Func> nonConstDerivs, Const derivMult, Variables.Variable differential, Func original) {
+    private static Func integListImpl(List<Func> tested, List<Func> nonConstDerivs, Const derivMult, Variables.Variable differential, Func outermostIntegrand) {
         if (tested.stream().allMatch(SimpleIntegratableFunction.class::isInstance)) {
             List<SimpleIntegratableFunction> integratables = tested.stream()
                 .map(SimpleIntegratableFunction.class::cast).toList();
@@ -223,7 +226,7 @@ public class Integration {
                         Variables.Variable var = Variables.of(Multiplication.multiply(inner, derivMult.reciporical()), Variables.getNextForDifferential(differential.identifier()));
                         List<@Nullable Func> substituted = integratables.stream().map(sif -> sif.substitute(var, func -> func.equals(inner))).toList();
                         Func result = substituted.stream().anyMatch(Objects::isNull)
-                            ? null : integrate(Multiplication.multiply(substituted.toArray(Func[]::new)), var);
+                            ? null : integrate(Multiplication.multiply(substituted.toArray(Func[]::new)), var, outermostIntegrand);
                         if (result != null && !(result instanceof FailedIntegral)) return result;
                         // else try parts
                     }
