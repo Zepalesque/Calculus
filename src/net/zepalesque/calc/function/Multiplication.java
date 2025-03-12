@@ -1,11 +1,15 @@
 package net.zepalesque.calc.function;
 
+import net.zepalesque.calc.Factorable;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class Multiplication {
@@ -40,7 +44,6 @@ public class Multiplication {
             }
             else if (f instanceof Const c1) c = c.multiply(c1);
             else c.multiply(add(numerators, f));
-            
         }
         if (!c.equals(Constants.ONE)) {
             Set<Func> cset = new HashSet<>();
@@ -85,7 +88,7 @@ public class Multiplication {
         return add(funcs, toAdd, Constants.ONE);
     }
     
-    record Product(Set<Func> factors, List<Func> asList) implements MultiTermFunction {
+    record Product(Set<Func> factors, List<Func> asList) implements MultiTermFunction, Factorable {
         
         public Product(Set<Func> factors) {
             this(factors, factors.stream().toList());
@@ -140,6 +143,13 @@ public class Multiplication {
         }
         
         @Override
+        public Func substituteImpl(Func var, Predicate<Func> predicate) {
+            Func[] successes = this.factors().stream().map(fac -> fac.substitute(var, predicate)).toArray(Func[]::new);
+            if (Arrays.stream(successes).anyMatch(Objects::isNull)) return null;
+            else return multiply(successes);
+        }
+        
+        @Override
         public String toString() {
             return String.format("(%s)", internalString());
         }
@@ -157,6 +167,11 @@ public class Multiplication {
                 
             }
             return sb.toString();
+        }
+        
+        @Override
+        public Collection<Func> factorsImpl() {
+            return this.factors();
         }
     }
 }

@@ -3,6 +3,7 @@ package net.zepalesque.calc.function;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 public class Division {
     
@@ -53,6 +54,14 @@ public class Division {
             Func num = Addition.add(da_b, a_db.negate());
             Func den = Powers.pow(denominator, Constants.TWO);
             return divide(num, den);
+        }
+        
+        @Override
+        public Func substituteImpl(Func var, Predicate<Func> predicate) {
+            Func num = this.numerator.substitute(var, predicate);
+            Func den = this.denominator.substitute(var, predicate);
+            if (num == null || den == null) return null;
+            else return divide(num, den);
         }
         
         @Override

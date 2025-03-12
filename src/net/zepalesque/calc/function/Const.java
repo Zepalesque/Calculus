@@ -1,6 +1,8 @@
 package net.zepalesque.calc.function;
 
-public interface Const extends Func {
+import java.util.function.Predicate;
+
+public sealed interface Const extends Func permits Constants.Constant, Constants.NamedConst {
     boolean isNamed();
     
     double value();
@@ -22,6 +24,12 @@ public interface Const extends Func {
     
     default Const reciporical() {
         return Constants.ONE.divideBy(this);
+    }
+    
+    @Override
+    
+    default Const substituteImpl(Func var, Predicate<Func> predicate) {
+        return this;
     }
     
     Const negate();

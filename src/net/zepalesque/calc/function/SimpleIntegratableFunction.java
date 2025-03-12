@@ -2,6 +2,8 @@ package net.zepalesque.calc.function;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Predicate;
+
 public interface SimpleIntegratableFunction extends Func {
     Func inner();
     
@@ -15,6 +17,16 @@ public interface SimpleIntegratableFunction extends Func {
     }
     
     @Nullable Func integrateImpl();
+    
+    @Nullable
+    @Override
+    default Func substituteImpl(Func var, Predicate<Func> predicate) {
+        if (predicate.test(this.inner())) {
+            return createWithSubstitution(var);
+        } else return null;
+    }
+    
+    Func createWithSubstitution(Func var);
     
     
 }

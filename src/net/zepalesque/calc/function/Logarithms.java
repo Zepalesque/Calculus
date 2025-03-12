@@ -2,6 +2,8 @@ package net.zepalesque.calc.function;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Predicate;
+
 public class Logarithms {
     
     public static Func ln(Func f) {
@@ -51,5 +53,12 @@ public class Logarithms {
         public Func integrateImpl() {
             return Addition.add(Multiplication.multiply(f(), this), f().negate());
         }
+        
+        @Override
+        public Func createWithSubstitution(Func var) {
+            return ln(var);
+        }
+        
+        
     }
 }

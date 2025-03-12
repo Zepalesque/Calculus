@@ -85,6 +85,11 @@ public class Trig {
         public Func integrateImpl() {
             return cosine(f).negate();
         }
+        
+        @Override
+        public Func createWithSubstitution(Func var) {
+            return sine(var);
+        }
     }
     
     record Cos(Func f) implements TrigFunc {
@@ -112,6 +117,11 @@ public class Trig {
         @Override
         public Func integrateImpl() {
             return sine(f);
+        }
+        
+        @Override
+        public Func createWithSubstitution(Func var) {
+            return cosine(var);
         }
     }
     
@@ -142,6 +152,11 @@ public class Trig {
         @Override
         public Func integrateImpl() {
             return Logarithms.ln(cosine(f)).negate();
+        }
+        
+        @Override
+        public Func createWithSubstitution(Func var) {
+            return tangent(var);
         }
     }
     
@@ -176,6 +191,11 @@ public class Trig {
         public Func integrateImpl() {
             return Logarithms.ln(Addition.add(cosecant(f), cotangent(f))).negate();
         }
+        
+        @Override
+        public Func createWithSubstitution(Func var) {
+            return cosecant(var);
+        }
     }
     
     record Sec(Func f) implements TrigFunc {
@@ -208,6 +228,11 @@ public class Trig {
         public Func integrateImpl() {
             return Logarithms.ln(Addition.add(secant(f), tangent(f)));
         }
+        
+        @Override
+        public Func createWithSubstitution(Func var) {
+            return secant(var);
+        }
     }
     
     record Cot(Func f) implements TrigFunc {
@@ -238,6 +263,11 @@ public class Trig {
         @Override
         public Func integrateImpl() {
             return Logarithms.ln(sine(f));
+        }
+        
+        @Override
+        public Func createWithSubstitution(Func var) {
+            return cotangent(var);
         }
     }
 }

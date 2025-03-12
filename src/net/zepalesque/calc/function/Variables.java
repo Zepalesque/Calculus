@@ -1,6 +1,24 @@
 package net.zepalesque.calc.function;
 
+import java.util.function.Predicate;
+
 public class Variables {
+    
+    private static final String charsForVars = "xutjklab";
+    
+    public static char getNextForDifferential(char current) {
+        int i = charsForVars.indexOf(current);
+        if (i != -1 && i < charsForVars.length() - 1) {
+            return charsForVars.charAt(i + 1);
+        } else {
+            return (char) (current + 1);
+        }
+    }
+    
+    public static Variable of(Func func, char id) {
+        if (func.equals(X)) return X;
+        else return VarHolder.create(id, func);
+    }
     
     public static final Variable X = new XVar();
     
@@ -19,9 +37,18 @@ public class Variables {
             return this;
         }
         
+        @Override
+        default Func substituteImpl(Func var, Predicate<Func> predicate) {
+            return predicate.test(this) ? var : null;
+        }
+        
+        @Override
+        default Func derivative() {
+            return Constants.ONE;
+        }
     }
     
-    public record VarHolder(char identifier, Func function, Func derivative) implements Variable {
+    public record VarHolder(char identifier, Func function, Func deriv) implements Variable {
         public static VarHolder create(char id, Func val) {
             return new VarHolder(id, val, val.derivative());
         }
@@ -65,7 +92,7 @@ public class Variables {
         
         @Override
         public Func function() {
-            return Polynomials.X;
+            return this;
         }
         
         @Override
@@ -84,8 +111,8 @@ public class Variables {
         }
         
         @Override
-        public Func derivative() {
-            return Constants.ONE;
+        public String toString() {
+            return "x";
         }
     }
 }

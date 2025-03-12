@@ -1,7 +1,10 @@
 package net.zepalesque.calc.function;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 public class Addition {
     
@@ -60,6 +63,13 @@ public class Addition {
             derivList.removeIf(func -> func.equals(Constants.ZERO));
             if (derivList.isEmpty()) return Constants.ZERO;
             return add(derivList.toArray(Func[]::new));
+        }
+        
+        @Override
+        public Func substituteImpl(Func var, Predicate<Func> predicate) {
+            Func[] successes = this.addends().stream().map(addend -> addend.substitute(var, predicate)).toArray(Func[]::new);
+            if (Arrays.stream(successes).anyMatch(Objects::isNull)) return null;
+            else return add(successes);
         }
         
         @Override

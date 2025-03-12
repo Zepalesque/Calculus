@@ -1,22 +1,27 @@
 package net.zepalesque.calc.function;
 
+import net.zepalesque.calc.Factorable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
 
 public class Powers {
     
     public static Func pow(Func base, Func exponent) {
         if (base instanceof Const c1 && exponent instanceof Const c2)
             return c1.pow(c2);
-        else if (base instanceof Polynomials.PTerm(Const coefficient, Const power)
+        else if (base instanceof Variables.Variable v
             && exponent instanceof Const c)
-            return Polynomials.term(coefficient.pow(c), power.multiply(c));
+            return Polynomials.term(Constants.ONE, v, c);
+        else if (base instanceof Polynomials.PTerm(Const coefficient, Variables.Variable v, Const power)
+            && exponent instanceof Const c)
+            return Polynomials.term(coefficient.pow(c), v, power.multiply(c));
         else if (base instanceof PowerFunc pow)
             return pow(pow.f(), Multiplication.multiply(pow.g(), exponent));
         else if (exponent instanceof Const c)
@@ -50,7 +55,7 @@ public class Powers {
         Func g();
     }
     
-    interface Pow extends PowerFunc, SimpleIntegratableFunction {
+    interface Pow extends PowerFunc, SimpleIntegratableFunction, Factorable {
         @Override
         Const g();
         
@@ -59,8 +64,12 @@ public class Powers {
             return f();
         }
         
-        default Stream<Func> factor() {
-            if (g().value() < 1 && g().value() > 0) return Stream.of(this);
+        default Collection<Func> factorsImpl() {
+            return null;
+        }
+        
+        default List<Func> factor() {
+            if (g().value() < 1 && g().value() > 0) return List.of(this);
             int full = (int) Math.round(g().value() % 1);
             boolean negative = full < 0;
             Const remainder = g().subtract(Constants.constant(full));
@@ -68,8 +77,14 @@ public class Powers {
             Func[] facs = new Func[full + 1];
             Func func = !negative ? f() : Division.divide(Constants.ONE, f());
             Arrays.fill(facs, 0, full, func);
-            if (!remainder.equals(Constants.ZERO)) facs[full + 1] = remainder;
-            return Arrays.stream(facs).filter(Objects::nonNull);
+            // TODO: check for errors due to modulo not working as expected with negative #s
+            if (!remainder.equals(Constants.ZERO)) facs[full + 1] = pow(func, remainder);
+            return Arrays.stream(facs).filter(Objects::nonNull).toList();
+        }
+        
+        @Override
+        default Func createWithSubstitution(Func var) {
+            return pow(var, g());
         }
     }
     
@@ -117,8 +132,8 @@ public class Powers {
         }
         
         @Override
-        public Stream<Func> factor() {
-            return Stream.of(f(), f());
+        public List<Func> factor() {
+            return List.of(f(), f());
         }
     }
     
@@ -155,8 +170,8 @@ public class Powers {
         }
         
         @Override
-        public Stream<Func> factor() {
-            return Stream.of(this);
+        public List<Func> factor() {
+            return List.of(this);
         }
     }
     
@@ -212,6 +227,13 @@ public class Powers {
         }
         
         @Override
+        public Func substituteImpl(Func var, Predicate<Func> predicate) {
+            Func gs = this.g().substitute(var, predicate);
+            if (gs != null) return pow(f(), gs);
+            else return null;
+        }
+        
+        @Override
         public Func f() {
             return Constants.E;
         }
@@ -231,6 +253,13 @@ public class Powers {
         @Override
         public Func derivative() {
             return Multiplication.multiply(this, g.derivative(), f.ln());
+        }
+        
+        @Override
+        public Func substituteImpl(Func var, Predicate<Func> predicate) {
+            Func gs = this.g().substitute(var, predicate);
+            if (gs != null) return pow(f(), gs);
+            else return null;
         }
     }
     
@@ -256,6 +285,14 @@ public class Powers {
         @Override
         public String toString() {
             return String.format("(%s ^ %s)", f, g);
+        }
+        
+        @Override
+        public Func substituteImpl(Func var, Predicate<Func> predicate) {
+            Func gs = this.g().substitute(var, predicate);
+            Func fs = this.f().substitute(var, predicate);
+            if (gs != null && fs != null) return pow(fs, gs);
+            else return null;
         }
     }
 }

@@ -13,12 +13,12 @@ public class Series {
             List<Func> terms = new ArrayList<>();
             Func base = Constants.constant(f.eval(center.value()));
             terms.add(base);
-            Func currentDeriv = f.derivative();
+            Func currentDeriv = f.deriv();
             for (int i = 1; i <= degree; i++) {
                 int factorial = 1;
                 for (int i1 = 1; i1 <= i; i1++) factorial *= i1;
                 TaylorTerm term = new TaylorTerm(Constants.constant(currentDeriv.eval(center.value())).divideBy(Constants.constant(factorial)), Constants.constant(i), center);
-                currentDeriv = currentDeriv.derivative();
+                currentDeriv = currentDeriv.deriv();
                 terms.add(term);
             }
             return new TaylorSeriesHolder(new Addition.Sum(terms.reversed()), degree, 0, originalID);
@@ -39,7 +39,7 @@ public class Series {
         }
         
         @Override
-        public Func derivative() {
+        public Func deriv() {
             return new TaylorTerm(power.multiply(coefficient), power.add(Constants.ONE.negate()), centerX);
         }
         
@@ -71,8 +71,8 @@ public class Series {
         }
         
         @Override
-        public Func derivative() {
-            return new TaylorSeriesHolder(f.derivative(), precision, derivativeNum + 1, originalID);
+        public Func deriv() {
+            return new TaylorSeriesHolder(f.deriv(), precision, derivativeNum + 1, originalID);
         }
     }*/
 }

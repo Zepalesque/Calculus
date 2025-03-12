@@ -1,10 +1,10 @@
 package net.zepalesque.calc.function;
 
-public interface Term extends Powers.PowerFunc {
+public interface Term extends Powers.Pow {
     
     @Override
     default Func f() {
-       return Polynomials.X;
+       return this.inner();
     }
     
     default Const g() {
@@ -12,6 +12,8 @@ public interface Term extends Powers.PowerFunc {
     }
     
     Const coefficient();
+    
+    Func inner();
     
     Const power();
     

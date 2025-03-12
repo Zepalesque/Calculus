@@ -325,7 +325,7 @@ public class Constants {
         }
     }
     
-    interface NamedConst extends Const {
+    sealed interface NamedConst extends Const permits NamedConstant {
         @Override
         Const add(Const other);
     }
