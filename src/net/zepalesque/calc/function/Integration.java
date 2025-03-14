@@ -13,6 +13,17 @@ import java.util.stream.Stream;
 
 public class Integration {
     
+    public record DefIntegral(IndefIntegral integral, Const a, Const b) {
+        
+        @Nullable
+        Const calculate() {
+            Func func = this.integral().integrate();
+            Const upper = func.eval(b);
+            Const lower = func.eval(a);
+            return upper.subtract(lower);
+        }
+    }
+    
     
     public record IndefIntegral(Func func, Variables.Variable differential) {
         
@@ -23,17 +34,15 @@ public class Integration {
         
         public Func integrate() {
             Func f = Integration.integrate(func, differential, null);
-            if (f != null) {
-                if (!(f instanceof FailedIntegral)) {
-                    if (f.termVariable().equals(differential)) return f;
-                    else {
-                        Variables.Variable v = f.termVariable();
-                        while (v != differential) {
-                            Variables.Variable finalV = v;
-                            f = f.substitute(v.function(), f1 -> f1.equals(finalV));
-                            if (f == null) break;
-                            v = f.termVariable();
-                        }
+            if (success(f)) {
+                if (f.termVariable().equals(differential)) return f;
+                else {
+                    Variables.Variable v = f.termVariable();
+                    while (v != differential) {
+                        Variables.Variable finalV = v;
+                        f = f.substitute(v.function(), f1 -> f1.equals(finalV));
+                        if (f == null) break;
+                        v = f.termVariable();
                     }
                 }
             }
@@ -173,11 +182,7 @@ public class Integration {
                     if (longAsBoolArray(adder, i + Long.SIZE - list.size())) sub2[i] = null;
                     else sub1[i] = null;
                 }
-                List<Func> tested = Arrays.stream(sub1).filter(Objects::nonNull).toList();
-                List<Func> possibleDerivs = Arrays.stream(sub2).filter(Objects::nonNull).toList();
-                List<Func> nonConstDerivs = possibleDerivs.stream().filter(func -> !(func instanceof Const) && func != null).toList();
-                Const derivMult = possibleDerivs.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
-                @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand, partsSoFar);
+                @Nullable Func possibleResult = setupIntegrateList(differential, outermostIntegrand, partsSoFar, sub1, sub2);
                 if (possibleResult != null) return possibleResult;
                 adder++;
             } while (adder < Math.pow(2, list.size()));
@@ -196,13 +201,19 @@ public class Integration {
                 if (current[i]) sub2[i] = null;
                 else sub1[i] = null;
             }
-            List<Func> tested = Arrays.stream(sub1).filter(Objects::nonNull).toList();
-            List<Func> possibleDerivs = Arrays.stream(sub2).filter(Objects::nonNull).toList();
-            List<Func> nonConstDerivs = possibleDerivs.stream().filter(func -> !(func instanceof Const) && func != null).toList();
-            Const derivMult = possibleDerivs.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
-            @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand, partsSoFar);
+            @Nullable Func possibleResult = setupIntegrateList(differential, outermostIntegrand, partsSoFar, sub1, sub2);
             if (possibleResult != null) return possibleResult;
         } while (addOne(current));
+        return null;
+    }
+    
+    private static @Nullable Func setupIntegrateList(Variables.Variable differential, Func outermostIntegrand, Func partsSoFar, Func[] sub1, Func[] sub2) {
+        List<Func> tested = Arrays.stream(sub1).filter(Objects::nonNull).toList();
+        List<Func> possibleDerivs = Arrays.stream(sub2).filter(Objects::nonNull).toList();
+        List<Func> nonConstDerivs = possibleDerivs.stream().filter(func -> !(func instanceof Const) && func != null).toList();
+        Const derivMult = possibleDerivs.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
+        @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand, partsSoFar);
+        if (possibleResult != null) return possibleResult;
         return null;
     }
     
@@ -228,12 +239,12 @@ public class Integration {
                         List<@Nullable Func> substituted = integratables.stream().map(sif -> sif.substitute(var, func -> func.equals(inner))).toList();
                         Func result = substituted.stream().anyMatch(Objects::isNull)
                             ? null : integrate(Multiplication.multiply(substituted.toArray(Func[]::new)), var, outermostIntegrand);
-                        if (result != null && !(result instanceof FailedIntegral)) return result;
+                        if (success(result)) return result;
                     }
                 } else if (integratables.size() == 1) {
                     SimpleIntegratableFunction f = integratables.getFirst();
                     Func attempt = f.tryIntegrate(Multiplication.multiply(nonConstDerivs.toArray(Func[]::new)));
-                    if (attempt != null) return attempt;
+                    if (success(attempt)) return attempt;
                 }
                 
             }
@@ -272,5 +283,9 @@ public class Integration {
             added[i] = i != subsetChecker.length - 1 && carry[i + 1];
         }
         return !Arrays.equals(subsetChecker, max);
+    }
+    
+    public static boolean success(@Nullable Func f) {
+        return f != null && !(f instanceof FailedIntegral);
     }
 }
