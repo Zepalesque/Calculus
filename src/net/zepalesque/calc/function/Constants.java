@@ -322,7 +322,7 @@ public class Constants {
         @Override
         public String toString() {
             if (this.value() % 1 != 0 && this.reciporical().value() % 1 == 0) {
-                return String.format("1/%s", this.reciporical());
+                return String.format("(1/%s)", this.reciporical());
             }
             return FORMAT.format(this.value);
         }
@@ -361,12 +361,31 @@ public class Constants {
         
         @Override
         public Const divideBy(Const other) {
-            return namedConstant(String.format("(%s / %s)", this, other), this.value() / other.value());
+            if (other.equals(NAN) || this.equals(NAN)) return NAN;
+            else if (Double.isInfinite(this.value()) && Double.isInfinite(other.value())) return NAN;
+            else if (Double.isInfinite(other.value())) return ZERO;
+            else if (other.equals(ONE)) return this;
+            else if (other.equals(NEG_ONE)) return this.negate();
+            else if (this.equals(other)) return ONE;
+            else if (this.equals(other.negate())) return NEG_ONE;
+            else if (other.equals(ZERO)) return this.equals(ZERO) ? NAN : this.value() > 0 ? INF : NEG_INF;
+            else if (this.equals(ZERO)) return ZERO;
+            return namedConstant(String.format("(%s/%s)", this, other), this.value() / other.value());
         }
         
         @Override
         public Const pow(Const other) {
-            return namedConstant(String.format("(%s ^ %s)", this, other), Math.pow(this.value(), other.value()));
+            if (other.equals(NAN) || this.equals(NAN)) return NAN;
+            else if (other.equals(ZERO))
+                if (Double.isInfinite(this.value()) || this.equals(ZERO))
+                    return NAN;
+                else return ONE;
+            else if (this.equals(ONE))
+                if (other.equals(INF))
+                    return NAN;
+                else return this;
+            else if (this.equals(ZERO)) return ZERO;
+            return namedConstant(String.format("(%s^%s)", this, other), Math.pow(this.value(), other.value()));
         }
         
         @Override

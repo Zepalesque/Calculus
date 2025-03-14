@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class Integration {
     
@@ -80,7 +81,7 @@ public class Integration {
             } else {
                 Const c = factors.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
                 List<Func> nonConst = factors.stream().filter(func -> !(func instanceof Const)).toList();
-                Func tryInteg = tryToIntegrate(nonConst, differential, outermostIntegrand);
+                Func tryInteg = tryToIntegrate(nonConst, differential, outermostIntegrand, Multiplication.multiply(nonConst.toArray(Func[]::new)));
                 if (tryInteg != null) return Multiplication.multiply(tryInteg, c);
             }
             
@@ -160,10 +161,10 @@ public class Integration {
     
     // checks all subsets of a list of functions, and see if they're all integrable and their inner functions' derivatives all equal the other funcs
     @Nullable
-    private static Func tryToIntegrate(List<Func> list, Variables.Variable differential, Func outermostIntegrand) {
+    private static Func tryToIntegrate(List<Func> list, Variables.Variable differential, Func outermostIntegrand, Func partsSoFar) {
         if (list.size() > Long.SIZE) {
             // the long way /:
-            return tryIntegLongList(list, differential, outermostIntegrand);
+            return tryIntegLongList(list, differential, outermostIntegrand, partsSoFar);
         } else {
             long adder = 1;
             do {
@@ -176,7 +177,7 @@ public class Integration {
                 List<Func> possibleDerivs = Arrays.stream(sub2).filter(Objects::nonNull).toList();
                 List<Func> nonConstDerivs = possibleDerivs.stream().filter(func -> !(func instanceof Const) && func != null).toList();
                 Const derivMult = possibleDerivs.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
-                @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand);
+                @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand, partsSoFar);
                 if (possibleResult != null) return possibleResult;
                 adder++;
             } while (adder < Math.pow(2, list.size()));
@@ -185,7 +186,7 @@ public class Integration {
     }
     
     @Nullable
-    private static Func tryIntegLongList(List<Func> list, Variables.Variable differential, Func outermostIntegrand) {
+    private static Func tryIntegLongList(List<Func> list, Variables.Variable differential, Func outermostIntegrand, Func partsSoFar) {
         boolean[] current = new boolean[list.size()];
         current[list.size() - 1] = true;
         do {
@@ -199,14 +200,14 @@ public class Integration {
             List<Func> possibleDerivs = Arrays.stream(sub2).filter(Objects::nonNull).toList();
             List<Func> nonConstDerivs = possibleDerivs.stream().filter(func -> !(func instanceof Const) && func != null).toList();
             Const derivMult = possibleDerivs.stream().filter(func -> func instanceof Const).map(Const.class::cast).reduce(Constants.ONE, Const::multiply);
-            @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand);
+            @Nullable Func possibleResult = integListImpl(tested, nonConstDerivs, derivMult, differential, outermostIntegrand, partsSoFar);
             if (possibleResult != null) return possibleResult;
         } while (addOne(current));
         return null;
     }
     
     @Nullable
-    private static Func integListImpl(List<Func> tested, List<Func> nonConstDerivs, Const derivMult, Variables.Variable differential, Func outermostIntegrand) {
+    private static Func integListImpl(List<Func> tested, List<Func> nonConstDerivs, Const derivMult, Variables.Variable differential, Func outermostIntegrand, Func partsSoFar) {
         if (tested.stream().allMatch(SimpleIntegratableFunction.class::isInstance)) {
             List<SimpleIntegratableFunction> integratables = tested.stream()
                 .map(SimpleIntegratableFunction.class::cast).toList();
@@ -214,38 +215,45 @@ public class Integration {
                 SimpleIntegratableFunction f = integratables.getFirst();
                 Func attempt = f.tryIntegrate(Multiplication.multiply(nonConstDerivs.toArray(Func[]::new)));
                 if (attempt != null) return attempt;
-                // else try parts
             }
             Optional<SimpleIntegratableFunction> extract = integratables.stream().findFirst();
             if (extract.isPresent()) {
                 Func inner = extract.get().inner();
                 Func deriv = inner.derivative();
                 if (deriv instanceof Factorable factorable) {
-                    List<Func> factors = factorable.factor();
-                    List<Func> nonConst = factors.stream().filter(f -> !(f instanceof Const)).toList();
+                    List<Func> derivativeFactors = factorable.factor();
+                    List<Func> nonConst = derivativeFactors.stream().filter(f -> !(f instanceof Const)).toList();
                     if (nonConst.equals(nonConstDerivs)) {
                         Variables.Variable var = Variables.of(Multiplication.multiply(inner, derivMult.reciporical()), Variables.getNextForDifferential(differential.identifier()));
                         List<@Nullable Func> substituted = integratables.stream().map(sif -> sif.substitute(var, func -> func.equals(inner))).toList();
                         Func result = substituted.stream().anyMatch(Objects::isNull)
                             ? null : integrate(Multiplication.multiply(substituted.toArray(Func[]::new)), var, outermostIntegrand);
                         if (result != null && !(result instanceof FailedIntegral)) return result;
-                        // else try parts
                     }
                 } else if (integratables.size() == 1) {
                     SimpleIntegratableFunction f = integratables.getFirst();
                     Func attempt = f.tryIntegrate(Multiplication.multiply(nonConstDerivs.toArray(Func[]::new)));
                     if (attempt != null) return attempt;
-                    // else try parts
                 }
                 
-                /* else if (deriv.equals(Multiplication.multiply(nonConstDerivs.toArray(Func[]::new)))) {
-                    Variables.Variable var = Variables.of(Multiplication.multiply(inner, derivMult.reciporical()), Variables.getNextForDifferential(differential.identifier()));
-                    List<@Nullable Func> substituted = integratables.stream().map(sif -> sif.substitute(var, func -> func.equals(inner))).toList();
-                    Func result = substituted.stream().anyMatch(Objects::isNull)
-                        ? null : integrate(Multiplication.multiply(substituted.toArray(Func[]::new)), var);
-                    if (result != null && !(result instanceof FailedIntegral)) return result;
-                }*/
             }
+            // else try parts
+            /*Func u = Multiplication.multiply(tested.stream().filter(Objects::nonNull).toArray(Func[]::new));
+            Func dv = Multiplication.multiply(Stream.concat(Stream.of(u), nonConstDerivs.stream()).toArray(Func[]::new));
+            Func uv = Multiplication.multiply(u.substituteImpl(differential.function(), differential::equals), differential.function());
+            Func vdu = Multiplication.multiply(differential, u.derivative());
+            
+            while (uv.termVariable() != Variables.X)
+                uv = Multiplication.multiply(uv.substituteImpl(uv.termVariable().function(), uv.termVariable()::equals), uv.termVariable().derivative());
+            while (vdu.termVariable() != Variables.X)
+                vdu = Multiplication.multiply(vdu.substituteImpl(vdu.termVariable().function(), vdu.termVariable()::equals), vdu.termVariable().derivative());
+            
+            if (vdu.equals(outermostIntegrand)) {
+                return Multiplication.multiply(partsSoFar, Constants.ONE_HALF);
+            } else {
+                Func integrated = integrate(vdu, differential, outermostIntegrand).negate();
+                if (integrated != null) Addition.add(uv, integrated);
+            }*/
         }
         return null;
     }
