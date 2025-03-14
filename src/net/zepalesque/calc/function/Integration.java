@@ -1,7 +1,6 @@
 package net.zepalesque.calc.function;
 
 import net.zepalesque.calc.Calculus;
-import net.zepalesque.calc.Factorable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -9,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 public class Integration {
     

@@ -1,6 +1,5 @@
 package net.zepalesque.calc.function;
 
-import net.zepalesque.calc.Factorable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;

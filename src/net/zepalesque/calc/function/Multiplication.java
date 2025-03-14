@@ -1,7 +1,5 @@
 package net.zepalesque.calc.function;
 
-import net.zepalesque.calc.Factorable;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;

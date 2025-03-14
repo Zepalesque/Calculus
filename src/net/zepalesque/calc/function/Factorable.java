@@ -1,6 +1,4 @@
-package net.zepalesque.calc;
-
-import net.zepalesque.calc.function.Func;
+package net.zepalesque.calc.function;
 
 import java.util.Collection;
 import java.util.List;
