@@ -23,8 +23,13 @@ import net.zepalesque.calc.function.Variables;
 // TODO (continued...): Absolute value, sign function, definite integrals, improper integrals (maybe), etc
 
 public class Calculus {
-    
+
+//    public static final PrintWriter OUT = new PrintWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8), true);
+
     public static void main(String[] args) {
+
+        // maybe will work, idk
+
         Variables.Variable x = Variables.X;
         Func basicPolynomial = Addition.add(
             Polynomials.term(Constants.ONE, x, Constants.THREE),
@@ -33,7 +38,7 @@ public class Calculus {
             Constants.ONE
         );
         printAll(basicPolynomial, "f");
-        
+
 //        Series.TaylorSeries taylorSeries = new Series.TaylorSeries(basicPolynomial, 'f');
 //        Func approx = taylorSeries.approximate(Constants.ZERO, 3);
 //        printFuncAndDerivative(approx, 'g');

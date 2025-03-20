@@ -21,13 +21,15 @@ public class Integration {
             return upper.subtract(lower);
         }
     }
-    
-    
+
+
+
     public record IndefIntegral(Func func, Variables.Variable differential) {
         
         @Override
         public String toString() {
-            return String.format("∫ %s %s", Calculus.noParenthesisString(func), differential.differential());
+            // TODO: get console display of ∫ to work
+            return String.format("⌠ %s %s", Calculus.noParenthesisString(func), differential.differential());
         }
         
         public Func integrate() {
